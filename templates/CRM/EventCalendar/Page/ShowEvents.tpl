@@ -53,6 +53,7 @@ function buildCalendar( ) {
   var jsonStr = JSON.stringify(events_data);
   var showTime = events_data.timeDisplay;
   var weekStartDay = {/literal}{$weekBeginDay}{literal};
+  var use24HourFormat = {/literal}{$use24Hour}{literal};
 
   cj('#calendar').fullCalendar({
     eventSources: [
@@ -61,7 +62,7 @@ function buildCalendar( ) {
     displayEventEnd: true,
     displayEventTime: showTime ? 1 : 0,
     firstDay:weekStartDay,
-    timeFormat: 'h(:mm)A',
+    timeFormat: use24HourFormat ? 'HH(:mm)' : 'hh(:mm)A',
     header: {
       left: 'prev,next today',
       center: 'title',

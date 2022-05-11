@@ -75,6 +75,12 @@
     <add>4.4</add>
   </field>
   <field>
+    <name>time_format_24_hour</name>
+    <type>boolean</type>
+    <comment>Use 24 hour format</comment>
+    <add>4.4</add>
+  </field>
+  <field>
     <name>recurring_day</name>
     <type>boolean</type>
     <comment>Show recurring events</comment>

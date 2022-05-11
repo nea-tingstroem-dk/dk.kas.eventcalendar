@@ -97,6 +97,13 @@ class CRM_EventCalendar_DAO_EventCalendar extends CRM_Core_DAO {
    * @var boolean
    */
   public $week_begins_from_day;
+  
+    /**
+   * Use 24 hour time format
+   *
+   * @var boolean
+   */
+  public $time_format_24_hour;
 
   /**
    * Whether to show recurring events.
@@ -223,6 +230,16 @@ class CRM_EventCalendar_DAO_EventCalendar extends CRM_Core_DAO {
           'type' => CRM_Utils_Type::T_BOOLEAN,
           'title' => ts('week_begins_from_day'),
           'description' => ts('week_begins_from_day'),
+          'table_name' => 'civicrm_event_calendar',
+          'entity' => 'EventCalendar',
+          'bao' => 'CRM_EventCalendar_DAO_EventCalendar',
+          'localizable' => 0,
+        ],
+        'time_format_24_hour' => [
+          'name' => 'time_format_24_hour',
+          'type' => CRM_Utils_Type::T_BOOLEAN,
+          'title' => ts('Use 24 hour format'),
+          'description' => ts('time_format_24_hour'),
           'table_name' => 'civicrm_event_calendar',
           'entity' => 'EventCalendar',
           'bao' => 'CRM_EventCalendar_DAO_EventCalendar',
