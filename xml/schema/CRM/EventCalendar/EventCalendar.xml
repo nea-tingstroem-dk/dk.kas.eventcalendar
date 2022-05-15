@@ -7,7 +7,6 @@
   <comment>Stores Event Calendar parameters for display</comment>
   <add>4.4</add>
   <log>true</log>
-
   <field>
     <name>id</name>
     <type>int unsigned</type>
@@ -23,6 +22,12 @@
     <name>calendar_title</name>
     <type>varchar(255)</type>
     <comment>Calendar Title</comment>
+    <add>4.4</add>
+  </field>
+  <field>
+    <name>calendar_type</name>
+    <type>varchar(64)</type>
+    <comment>Null or resource name</comment>
     <add>4.4</add>
   </field>
   <field>
@@ -81,7 +86,7 @@
     <add>4.4</add>
   </field>
   <field>
-    <name>recurring_day</name>
+    <name>recurring_event</name>
     <type>boolean</type>
     <comment>Show recurring events</comment>
     <add>4.4</add>

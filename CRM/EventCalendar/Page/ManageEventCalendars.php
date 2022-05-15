@@ -1,52 +1,70 @@
 <?php
+
 use CRM_EventCalendar_ExtensionUtil as E;
 
 class CRM_EventCalendar_Page_ManageEventCalendars extends CRM_Core_Page_Basic {
-  //This could be an ajax page here, but couldn't get the special colorbox javascript working with ajax functionality on
-  //public $useLivePageJS = TRUE;
 
-  static $_links = NULL;
+    //This could be an ajax page here, but couldn't get the special colorbox javascript working with ajax functionality on
+    //public $useLivePageJS = TRUE;
 
-  public function getBAOName() {
-    return 'CRM_EventCalendar_BAO_EventCalendar';
-  }
+    static $_links = NULL;
 
-  public function &links() {
-    if (!(self::$_links)) {
-      self::$_links = array(
-        CRM_Core_Action::UPDATE => array(
-          'name' => ts('View/Edit'),
-          'url' => 'civicrm/eventcalendarsettings',
-          'qs' => 'action=update&id=%%id%%&reset=1',
-          'title' => ts('Edit Event Calendar'),
-        ),
-        CRM_Core_Action::DELETE => array(
-          'name' => ts('Delete'),
-          'url' => 'civicrm/eventcalendarsettings',
-          'qs' => 'action=delete&id=%%id%%',
-          'title' => ts('Delete Event Calendar'),
-        ),
-        CRM_Core_Action::VIEW => array(
-        'name' => ts('Preview'),
-        'url' => 'civicrm/showevents',
-        'qs' => 'id=%%id%%',
-        'title' => ts('Preview Event Calendar'),
-        ),
-      );
+    public function getBAOName() {
+        return 'CRM_EventCalendar_BAO_EventCalendar';
     }
-    return self::$_links;
-  }
 
-  public function editForm() {
-    return 'CRM_EventCalendar_Form_EventCalendarSettings';
-  }
+    public function &links() {
+        if (!(self::$_links)) {
+            self::$_links = array(
+                CRM_Core_Action::UPDATE => array(
+                    'name' => ts('View/Edit'),
+                    'url' => 'civicrm/eventcalendarsettings',
+                    'qs' => 'action=update&id=%%id%%&reset=1',
+                    'title' => ts('Edit Event Calendar'),
+                ),
+                CRM_Core_Action::DELETE => array(
+                    'name' => ts('Delete'),
+                    'url' => 'civicrm/eventcalendarsettings',
+                    'qs' => 'action=delete&id=%%id%%',
+                    'title' => ts('Delete Event Calendar'),
+                ),
+                CRM_Core_Action::VIEW => array(
+                    'name' => ts('Preview'),
+                    'url' => 'civicrm/showevents',
+                    'qs' => 'id=%%id%%',
+                    'title' => ts('Preview Event Calendar'),
+                ),
+            );
+        }
+        return self::$_links;
+    }
 
-  public function editName() {
-    return 'Event Calendars';
-  }
+    public function run() {
+        $query = 'SELECT * FROM `civicrm_contact_type`
+                WHERE `description` LIKE "%resource%";';
+        $dao = CRM_Core_DAO::executeQuery($query);
 
-  public function userContext($mode = NULL) {
-    return 'civicrm/admin/event-calendar';
-  }
+        $resourcetypes = [];
+        while ($dao->fetch()) {
+            $resourcetype = [];
+            $resourcetype['resource_id'] = $dao->name;
+            $resourcetype['label'] = $dao->label;
+            $resourcetypes[] = $resourcetype;
+        }
+        $this->assign('resources', $resourcetypes);
+        return parent::run();
+    }
+
+    public function editForm() {
+        return 'CRM_EventCalendar_Form_EventCalendarSettings';
+    }
+
+    public function editName() {
+        return 'Event Calendars';
+    }
+
+    public function userContext($mode = NULL) {
+        return 'civicrm/admin/event-calendar';
+    }
 
 }
