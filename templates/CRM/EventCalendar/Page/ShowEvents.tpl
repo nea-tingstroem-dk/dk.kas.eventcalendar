@@ -59,6 +59,9 @@ function buildCalendar( ) {
     eventSources: [
       { events: events_data.events,}
     ],
+    dayClick: function(date, jsEvent, view) {
+      console.log('Clicked on: ' + date.format());
+    },
     displayEventEnd: true,
     displayEventTime: showTime ? 1 : 0,
     firstDay:weekStartDay,
@@ -73,7 +76,7 @@ function buildCalendar( ) {
       if(event.eventType && events_data.isfilter == "1" ) {
         return ['all', event.eventType].indexOf(cj('#event_selector').val()) >= 0
       }
-    }
+    },
   });
 
   CRM.$(function($) {

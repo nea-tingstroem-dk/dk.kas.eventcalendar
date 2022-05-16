@@ -113,9 +113,10 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
             }
         } else {
             $query = "
-                    SELECT e.`id` id, e.`title`, e.`start_date` start, e.`end_date` end, p.`contact_id`
+                    SELECT e.`id` id, e.`title`, e.`start_date` start, e.`end_date` end, p.`contact_id`, c.display_name
                     FROM `civicrm_event` e
                     LEFT JOIN `civicrm_participant` p ON p.event_id = e.id
+                    LEFT JOIN `civicrm_contact`c on c.id=p.contact_id
                     WHERE e.is_active = 1
                       AND e.is_template = 0
                     ";
@@ -136,19 +137,19 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
             $dao->url = html_entity_decode(CRM_Utils_System::url('civicrm/event/info', 'id=' . $dao->id ?: NULL));
             foreach ($eventCalendarParams as $k) {
                 $eventData[$k] = $dao->$k;
-                if (!empty($resources)) {
-                    $eventData['backgroundColor'] = "#{$resources[$dao->contact_id]}";
-                    $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                    $eventData['eventType'] = $civieventTypesList[$dao->event_type];
-                } else if (!empty($eventTypes)) {
-                    $eventData['backgroundColor'] = "#{$eventTypes[$dao->event_type]}";
-                    $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                    $eventData['eventType'] = $civieventTypesList[$dao->event_type];
-                } elseif ($calendarId == 0) {
-                    $eventData['backgroundColor'] = "";
-                    $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                    $eventData['eventType'] = $civieventTypesList[$dao->event_type];
-                }
+            }
+            if (!empty($resources)) {
+                $eventData['backgroundColor'] = "#{$resources[$dao->contact_id]}";
+                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
+                $eventData['title'] .= "\n" . $dao->display_name;
+            } else if (!empty($eventTypes)) {
+                $eventData['backgroundColor'] = "#{$eventTypes[$dao->event_type]}";
+                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
+                $eventData['eventType'] = $civieventTypesList[$dao->event_type];
+            } elseif ($calendarId == 0) {
+                $eventData['backgroundColor'] = "";
+                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
+                $eventData['eventType'] = $civieventTypesList[$dao->event_type];
             }
 
             $enrollment_status = civicrm_api3('Event', 'getsingle', [
