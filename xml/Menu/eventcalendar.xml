@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 <menu>
   <item>
+    <path>civicrm/bookevent</path>
+    <page_callback>CRM_EventCalendar_Form_CreateResourceEvent</page_callback>
+    <title>CreateResourceEvent</title>
+    <access_arguments>access CiviCRM</access_arguments>
+    <is_public>true</is_public>
+  </item>
+  <item>
     <path>civicrm/showevents</path>
     <page_callback>CRM_EventCalendar_Page_ShowEvents</page_callback>
     <title>Show Events</title>

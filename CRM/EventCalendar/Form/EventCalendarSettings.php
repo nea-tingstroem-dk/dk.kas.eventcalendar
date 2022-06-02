@@ -92,7 +92,7 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
                             WHERE `contact_sub_type` LIKE '%" . $this->_calendar_type . "%' 
                             ORDER BY `display_name`  ASC;";
                 $dao = CRM_Core_DAO::executeQuery($query);
-                $resource_list = [];
+                $resource_list = []; 
                 while ($dao->fetch()) {
                     $id = $dao->id;
                     $type = $dao->display_name;

@@ -52,6 +52,9 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
         //set title from settings; allow empty value so we don't duplicate titles
         CRM_Utils_System::setTitle(ts($settings['calendar_title']));
 
+        if (isset($settings['calendar_id'])) {
+            $this->assign('calendar_id', $settings['calendar_id']);
+        }
         $whereCondition = '';
         if (array_key_exists("event_types", $settings)) {
             $eventTypes = $settings['event_types'];
@@ -203,6 +206,7 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
         $calendarId = isset($_GET['id']) ? $_GET['id'] : '';
 
         if ($calendarId) {
+            $settings['calendar_id'] = $calendarId;
             $sql = "SELECT * FROM civicrm_event_calendar WHERE `id` = {$calendarId};";
             $dao = CRM_Core_DAO::executeQuery($sql);
             while ($dao->fetch()) {

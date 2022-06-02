@@ -54,6 +54,7 @@ function buildCalendar( ) {
   var showTime = events_data.timeDisplay;
   var weekStartDay = {/literal}{$weekBeginDay}{literal};
   var use24HourFormat = {/literal}{$use24Hour}{literal};
+  var calendarId = {/literal}{$calendar_id}{literal};
 
   cj('#calendar').fullCalendar({
     eventSources: [
@@ -61,6 +62,7 @@ function buildCalendar( ) {
     ],
     dayClick: function(date, jsEvent, view) {
       console.log('Clicked on: ' + date.format());
+      location.href = "/civicrm/bookevent?date=" + date.format() + "&calendar_id=" + calendarId;
     },
     displayEventEnd: true,
     displayEventTime: showTime ? 1 : 0,
