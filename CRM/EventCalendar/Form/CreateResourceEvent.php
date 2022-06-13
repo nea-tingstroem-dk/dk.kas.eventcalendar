@@ -9,13 +9,27 @@ use CRM_EventCalendar_ExtensionUtil as E;
  */
 class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
     private $_calendar_id = 0;
-    private $_start_time; 
+    private $_start_time=0; 
     
     public function buildQuickForm() {
-        $this->_calendar_id = $_GET['calendar_id'] ?? 0;
-        $this->_start_time = strtotime($_GET['date'])?? time();
-        $this->assign('start_time', date('Y-m-d H:i:s', $this->_start_time));
+        $getContactId = (int) CRM_Core_Session::singleton()->getLoggedInContactID();
+        $user = civicrm_api3('Contact', 'get', [
+            'sequential' => 1,
+            'return' => ["display_name", "external_identifier"],
+            'id' => $getContactId,
+          ]);
+        $superuser = CRM_Core_Permission::check('edit all events', $getContactId);
+        $authUser = CRM_Core_Permission::check('access CiviEvent', $getContactId);
+
+        $this->_calendar_id = $_GET['calendar_id'] ?? $_POST['calendar_id'];
+        $this->_start_time = strtotime($_GET['date'] ?? $_POST['start_time']);
+        if (!$this->_start_time) {
+            $this->_start_time = time();
+        }
+        $startTime = date('Y-m-d H:i:s', $this->_start_time);
+        $this->assign('start_time', $startTime);
         $this->add('hidden', 'calendar_id', $this->_calendar_id);
+        $this->add('hidden', 'start_time', $startTime);
         
         $resources = $this->getResources($this->_calendar_id);
         $resource_options = [];
@@ -27,7 +41,15 @@ class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
         $this->add('select', 'resource', ts("Select Resource(s)"), $resource_options, 
                 FALSE, ['class' => 'crm-select2', 'multiple' => TRUE, 'placeholder' => ts('- select resource(s) -')]);
 
-
+        if ($superuser) {
+            $this->addEntityRef('responsible_contact', ts('Select responsible contact'));
+        } else {
+            $u = $user['values'][0];
+            $this->add('static', 'user_info', ts('Responsible'),
+                   $u['external_identifier']. ' '.  $u['display_name'] );
+            $this->add('static', 'event_type', ts('Event type',
+                    ts('Private event')));
+        }
 
         $this->add('datepicker', 'event_start_date', ts('Start Date'), 
                 [
@@ -57,6 +79,7 @@ class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
 
     public function postProcess() {
         $values = $this->exportValues();
+        $this->_start_time = $values['start_time'];
 /*        CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
                     1 => $options[$values['favorite_color']],
         )));*/

@@ -40,12 +40,26 @@
           if (min_start < Date.now()) {
               min_start = Date.now();
           }
-              
-          $('#event_start_date').attr('mindate', ).trigger('change');
+          var start = new Date(min_start);
+          const date_string = start.toISOString().slice(0,10) + ' ' + start.toTimeString().slice(0,8);
+             
+          $('#event_start_date').attr('mindate', date_string ).trigger('change');
         }
       });
+      $('#event_start_date').change(function() {
+          console.log($(this).val());
+          const start = new Date($(this).val());
+          var default_end = new Date();
+          default_end.setDate(start.getDate()+1);
+          default_end.setHours(start.getHours());
+          default_end.setMinutes(start.getMinutes());
+          default_end.setSeconds(start.getSeconds());
+          console.log(default_end);
+          const date_string = default_end.toISOString().slice(0,10) + ' ' + default_end.toTimeString().slice(0,8);
+          $('#event_end_date').val(date_string).trigger('change');
+      });       
       $('#event_start_date').val('{/literal}{$start_time}{literal}').trigger('change');
-      console.log("and here");
+      $('#resource').trigger('change');
     });
 </script>
 {/literal}
