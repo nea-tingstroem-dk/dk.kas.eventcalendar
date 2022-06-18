@@ -8,62 +8,75 @@ use CRM_EventCalendar_ExtensionUtil as E;
  * @see https://docs.civicrm.org/dev/en/latest/framework/quickform/
  */
 class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
+
     private $_calendar_id = 0;
-    private $_start_time=0; 
-    
-    public function buildQuickForm() {
+    private $_start_time = 0;
+    private $_userId = 0;
+    private $_userName = "";
+    private $_userExternalId = "";
+    private $_superUser = false;
+    private $_authUser = false;
+
+    public function preProcess() {
+        parent::preProcess();
         $getContactId = (int) CRM_Core_Session::singleton()->getLoggedInContactID();
         $user = civicrm_api3('Contact', 'get', [
             'sequential' => 1,
             'return' => ["display_name", "external_identifier"],
             'id' => $getContactId,
-          ]);
-        $superuser = CRM_Core_Permission::check('edit all events', $getContactId);
-        $authUser = CRM_Core_Permission::check('access CiviEvent', $getContactId);
-
+        ]);
+        $actualUser = $user['values'][0];
+        $this->_userId = $actualUser['contact_id'];
+        $this->_userName = $actualUser['display_name'];
+        $this->_userExternalId = $actualUser['external_identifier'];
+        $this->_superUser = CRM_Core_Permission::check('edit all events', $getContactId);
+        $this->_authUser = CRM_Core_Permission::check('access CiviEvent', $getContactId);
         $this->_calendar_id = $_GET['calendar_id'] ?? $_POST['calendar_id'];
         $this->_start_time = strtotime($_GET['date'] ?? $_POST['start_time']);
         if (!$this->_start_time) {
             $this->_start_time = time();
         }
+    }
+
+    public function buildQuickForm() {
+
         $startTime = date('Y-m-d H:i:s', $this->_start_time);
         $this->assign('start_time', $startTime);
         $this->add('hidden', 'calendar_id', $this->_calendar_id);
         $this->add('hidden', 'start_time', $startTime);
-        
+
         $resources = $this->getResources($this->_calendar_id);
         $resource_options = [];
         foreach ($resources as $id => $res) {
             $resource_options[$id] = $res['name'];
         }
         $this->assign('resources', json_encode($resources));
-        
-        $this->add('select', 'resource', ts("Select Resource(s)"), $resource_options, 
+
+        $this->add('select', 'resource', ts("Select Resource(s)"), $resource_options,
                 FALSE, ['class' => 'crm-select2', 'multiple' => TRUE, 'placeholder' => ts('- select resource(s) -')]);
 
-        if ($superuser) {
+        if ($this->_superUser) {
             $this->addEntityRef('responsible_contact', ts('Select responsible contact'));
         } else {
-            $u = $user['values'][0];
             $this->add('static', 'user_info', ts('Responsible'),
-                   $u['external_identifier']. ' '.  $u['display_name'] );
-            $this->add('static', 'event_type', ts('Event type',
-                    ts('Private event')));
+                    $this->_userExternalId . ' ' . $this->_userName);
+            $this->add('static', 'event_type', ts('Event type'),
+                    ts('Private event'));
         }
 
-        $this->add('datepicker', 'event_start_date', ts('Start Date'), 
+        $this->add('datepicker', 'event_start_date', ts('Start Date'),
                 [
                     'minDate' => format_date($this->_start_time, 'y-m-d H:i'),
-                    'maxDate' => format_date($this->_start_time + 60*60*24, 'y-m-d H:i'),
+                    'maxDate' => format_date($this->_start_time + 60 * 60 * 24, 'y-m-d H:i'),
                 ],
                 TRUE, ['time' => TRUE]);
-        $this->add('datepicker', 'event_end_date', ts('End Date'), 
+        $this->add('datepicker', 'event_end_date', ts('End Date'),
                 [
                     'minDate' => format_date($this->_start_time, 'y-m-d H:i'),
-                    'maxDate' => format_date($this->_start_time + 60*60*48, 'y-m-d H:i'),
+                    'maxDate' => format_date($this->_start_time + 60 * 60 * 48, 'y-m-d H:i'),
                 ],
                 TRUE, ['time' => TRUE]);
-   // add form elements
+        // add form elements
         $this->addButtons(array(
             array(
                 'type' => 'submit',
@@ -80,9 +93,9 @@ class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
     public function postProcess() {
         $values = $this->exportValues();
         $this->_start_time = $values['start_time'];
-/*        CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
-                    1 => $options[$values['favorite_color']],
-        )));*/
+        /*        CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
+          1 => $options[$values['favorite_color']],
+          ))); */
         parent::postProcess();
     }
 
@@ -149,5 +162,4 @@ class CRM_EventCalendar_Form_CreateResourceEvent extends CRM_Core_Form {
 //        ];
 //        return $defaults;
 //    }
-
 }

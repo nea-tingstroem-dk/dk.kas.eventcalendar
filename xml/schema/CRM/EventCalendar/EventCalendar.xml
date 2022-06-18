@@ -97,4 +97,10 @@
     <comment>Show enrollment status</comment>
     <add>4.4</add>
   </field>
+  <field>
+    <name>event_templates</name>
+    <type>varchar(64)</type>
+    <comment>Null or Event template id's</comment>
+    <add>4.4</add>
+  </field>
 </table>

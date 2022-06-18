@@ -48,7 +48,7 @@ class CRM_EventCalendar_Upgrader_Base {
   public static function instance() {
     if (!self::$instance) {
       self::$instance = new CRM_EventCalendar_Upgrader(
-        'com.osseed.eventcalendar',
+        'dk.kas.eventcalendar',
         E::path()
       );
     }

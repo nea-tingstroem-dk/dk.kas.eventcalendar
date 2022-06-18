@@ -128,6 +128,13 @@ class CRM_EventCalendar_DAO_EventCalendar extends CRM_Core_DAO {
    * @var bool
    */
   public $enrollment_status;
+  
+  /**
+   * Show event templates
+   *
+   * @var varchar(64)
+   */
+  public $event_templates;
 
   /**
    * Class constructor.
@@ -318,6 +325,18 @@ class CRM_EventCalendar_DAO_EventCalendar extends CRM_Core_DAO {
           'title' => E::ts('Enrollment Status'),
           'description' => E::ts('Show enrollment status'),
           'where' => 'civicrm_event_calendar.enrollment_status',
+          'table_name' => 'civicrm_event_calendar',
+          'entity' => 'EventCalendar',
+          'bao' => 'CRM_EventCalendar_DAO_EventCalendar',
+          'localizable' => 0,
+          'add' => '4.4',
+        ],
+        'event_templates' => [
+          'name' => 'event_templates',
+          'type' => CRM_Utils_Type::T_TEXT,
+          'title' => E::ts('Event Template List'),
+          'description' => E::ts('List of id`s for possible event templates'),
+          'where' => 'civicrm_event_calendar.event_templates',
           'table_name' => 'civicrm_event_calendar',
           'entity' => 'EventCalendar',
           'bao' => 'CRM_EventCalendar_DAO_EventCalendar',

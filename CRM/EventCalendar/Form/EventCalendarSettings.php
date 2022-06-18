@@ -38,8 +38,8 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
             $this->add('hidden', 'calendar_id', $this->calendar_id);
             $this->assign('descriptions', $descriptions);
         } else {
-            CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/jscolor.js');
-            CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/eventcalendar.js');
+            CRM_Core_Resources::singleton()->addScriptFile('dk.kas.eventcalendar', 'js/jscolor.js');
+            CRM_Core_Resources::singleton()->addScriptFile('d.kas.eventcalendar', 'js/eventcalendar.js');
 
             $settings = $this->getFormSettings();
             $descriptions = array();
@@ -72,6 +72,12 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
             $this->add('advcheckbox', 'enrollment_status', ts('Show enrollment status'));
             $descriptions['enrollment_status'] = ts('Show enrollment status on calendar event.');
 
+            $eventTemplates = $this->getEventTemplates();
+
+            $this->add('select', 'event_templates', ts("Select Event template(s)"), $eventTemplates,
+                    FALSE, ['class' => 'crm-select2', 'multiple' => TRUE,
+                'placeholder' => ts('- select template(s) -')]);
+
             if ($this->_calendar_type === 'Event') {
                 $eventTypes = CRM_Event_PseudoConstant::eventType();
                 foreach ($eventTypes as $id => $type) {
@@ -92,7 +98,7 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
                             WHERE `contact_sub_type` LIKE '%" . $this->_calendar_type . "%' 
                             ORDER BY `display_name`  ASC;";
                 $dao = CRM_Core_DAO::executeQuery($query);
-                $resource_list = []; 
+                $resource_list = [];
                 while ($dao->fetch()) {
                     $id = $dao->id;
                     $type = $dao->display_name;
@@ -122,6 +128,7 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
 
     public function postProcess() {
         $submitted = $this->exportValues();
+        $templates = implode(',', $submitted['event_templates']);
         $this->_calendar_type = $submitted['calendar_type'];
         foreach ($submitted as $key => $value) {
             if (!$value && $key != 'calendar_title' && $key != 'calendar_type') {
@@ -131,13 +138,21 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
 
         if ($submitted['action'] == 'add') {
             $sql = "INSERT INTO civicrm_event_calendar
-                (calendar_title, calendar_type, show_past_events, show_end_date, show_public_events, 
-                events_by_month, event_timings, events_from_month, event_type_filters, 
-                week_begins_from_day, time_format_24_hour, recurring_event, enrollment_status)
+                (calendar_title, calendar_type, show_past_events, 
+                show_end_date, show_public_events, 
+                events_by_month, event_timings, events_from_month, 
+                event_type_filters, week_begins_from_day, 
+                time_format_24_hour, recurring_event, 
+                enrollment_status, event_templates)
             VALUES
-                ('{$submitted['calendar_title']}', '{$submitted['calendar_type']}', {$submitted['show_past_events']}, {$submitted['show_end_date']}, {$submitted['show_public_events']}, 
-                {$submitted['events_by_month']}, {$submitted['event_timings']}, {$submitted['events_from_month']}, {$submitted['event_type_filters']},
-                {$submitted['week_begins_from_day']}, {$submitted['time_format_24_hour']}, {$submitted['recurring_event']}, {$submitted['enrollment_status']});";
+                ('{$submitted['calendar_title']}', '{$submitted['calendar_type']}', 
+                {$submitted['show_past_events']}, {$submitted['show_end_date']}, 
+                {$submitted['show_public_events']}, {$submitted['events_by_month']},
+                {$submitted['event_timings']}, {$submitted['events_from_month']}, 
+                {$submitted['event_type_filters']}, {$submitted['week_begins_from_day']}, 
+                {$submitted['time_format_24_hour']}, {$submitted['recurring_event']}, 
+                {$submitted['enrollment_status']}, 
+                '{$templates}');";
             $dao = CRM_Core_DAO::executeQuery($sql);
             $cfId = CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
             foreach ($submitted as $key => $value) {
@@ -159,8 +174,19 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
 
         if ($submitted['action'] == 'update') {
             $sql = "UPDATE civicrm_event_calendar
-       SET calendar_title = '{$submitted['calendar_title']}', show_past_events = {$submitted['show_past_events']}, show_end_date = {$submitted['show_end_date']}, show_public_events = {$submitted['show_public_events']}, events_by_month = {$submitted['events_by_month']}, event_timings = {$submitted['event_timings']}, events_from_month = {$submitted['events_from_month']},
-        event_type_filters = {$submitted['event_type_filters']}, week_begins_from_day = {$submitted['week_begins_from_day']}, time_format_24_hour = {$submitted['time_format_24_hour']}, recurring_event = {$submitted['recurring_event']},  enrollment_status = {$submitted['enrollment_status']}
+       SET calendar_title = '{$submitted['calendar_title']}', 
+            show_past_events = {$submitted['show_past_events']}, 
+            show_end_date = {$submitted['show_end_date']}, 
+            show_public_events = {$submitted['show_public_events']}, 
+            events_by_month = {$submitted['events_by_month']},
+            event_timings = {$submitted['event_timings']}, 
+            events_from_month = {$submitted['events_from_month']},
+            event_type_filters = {$submitted['event_type_filters']}, 
+            week_begins_from_day = {$submitted['week_begins_from_day']}, 
+            time_format_24_hour = {$submitted['time_format_24_hour']}, 
+            recurring_event = {$submitted['recurring_event']},  
+            enrollment_status = {$submitted['enrollment_status']},
+            event_templates = '{$templates}'
        WHERE `id` = {$submitted['calendar_id']};";
             $dao = CRM_Core_DAO::executeQuery($sql);
             //delete current event type records to update with new ones
@@ -273,6 +299,19 @@ class CRM_EventCalendar_Form_EventCalendarSettings extends CRM_Core_Form {
             }
             return $defaults[0];
         }
+    }
+
+    private function getEventTemplates() {
+        $eventTemplates = [];
+        $sql = "SELECT `id`, `template_title` 
+            FROM `civicrm_event` 
+            WHERE `is_template` 
+            ORDER BY `template_title` ASC;";
+        $dao = CRM_Core_DAO::executeQuery($sql);
+        while ($dao->fetch()) {
+            $eventTemplates[$dao->id] = $dao->template_title;
+        }
+        return $eventTemplates;
     }
 
 }

@@ -26,4 +26,10 @@
     <title>Manage Event Calendars</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/ajax/eventcalendar</path>
+    <page_callback>CRM_EventCalendar_Page_AJAX::getEvents</page_callback>
+    <title>AJAX</title>
+    <access_arguments>access CiviEvent</access_arguments>
+  </item>
 </menu>

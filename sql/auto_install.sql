@@ -17,9 +17,9 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_event_calendar_event_type`;
-DROP TABLE IF EXISTS `civicrm_event_calendar_participant`;
-DROP TABLE IF EXISTS `civicrm_event_calendar`;
+-- DROP TABLE IF EXISTS `civicrm_event_calendar_event_type`;
+-- DROP TABLE IF EXISTS `civicrm_event_calendar_participant`;
+-- DROP TABLE IF EXISTS `civicrm_event_calendar`;
 
 SET FOREIGN_KEY_CHECKS=1;
 -- /*******************************************************
@@ -35,7 +35,7 @@ SET FOREIGN_KEY_CHECKS=1;
 -- * Stores Event Calendar parameters for display
 -- *
 -- *******************************************************/
-CREATE TABLE `civicrm_event_calendar` (
+CREATE TABLE IF NOT EXISTS `civicrm_event_calendar` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique EventCalendar ID',
   `calendar_title` varchar(255) COMMENT 'Calendar Title',
   `calendar_type` varchar(64) COMMENT 'Null or resource name',
@@ -50,6 +50,7 @@ CREATE TABLE `civicrm_event_calendar` (
   `time_format_24_hour` tinyint COMMENT 'Use 24 hour format',
   `recurring_event` tinyint COMMENT 'Show recurring events',
   `enrollment_status` tinyint COMMENT 'Show enrollment status',
+  `event_templates` varchar(64) COMMENT 'Event templates to use',
   PRIMARY KEY (`id`)
 )
 ENGINE=InnoDB;
@@ -61,7 +62,7 @@ ENGINE=InnoDB;
 -- * Resources and colors
 -- *
 -- *******************************************************/
-CREATE TABLE `civicrm_event_calendar_participant` (
+CREATE TABLE IF NOT EXISTS `civicrm_event_calendar_participant` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique EventCalendarParticipant ID',
   `event_calendar_id` int unsigned COMMENT 'FK to Event Calendar',
   `contact_id` int unsigned COMMENT 'FK to Contact',
@@ -79,7 +80,7 @@ ENGINE=InnoDB;
 -- * Event types and colors, FK to Event Calendar ID
 -- *
 -- *******************************************************/
-CREATE TABLE `civicrm_event_calendar_event_type` (
+CREATE TABLE IF NOT EXISTS `civicrm_event_calendar_event_type` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique EventCalendarEventType ID',
   `event_calendar_id` int unsigned COMMENT 'FK to Event Calendar',
   `event_type` int unsigned COMMENT 'Event Type id',

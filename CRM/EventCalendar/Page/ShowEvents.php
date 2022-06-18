@@ -39,149 +39,30 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
 
     public function run() {
         CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/moment.js', 5);
-        CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/fullcalendar.js', 10);
+        CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/fullcalendar/fullcalendar.js', 10);
+        CRM_Core_Resources::singleton()->addScriptFile('com.osseed.eventcalendar', 'js/fullcalendar/locale/da.js', 15);
         CRM_Core_Resources::singleton()->addStyleFile('com.osseed.eventcalendar', 'css/civicrm_events.css');
         CRM_Core_Resources::singleton()->addStyleFile('com.osseed.eventcalendar', 'css/fullcalendar.css');
 
         $eventTypesFilter = array();
+        $eventSettings = [];
         $civieventTypesList = CRM_Event_PseudoConstant::eventType();
 
         $config = CRM_Core_Config::singleton();
         //get settings
-        $settings = $this->_eventCalendar_getSettings();
+        $calendarId = isset($_GET['id']) ? $_GET['id'] : false;
+        if (!$calendarId) {
+            return;
+        }
+        $settings = $this->_eventCalendar_getSettings($calendarId);
         //set title from settings; allow empty value so we don't duplicate titles
         CRM_Utils_System::setTitle(ts($settings['calendar_title']));
 
-        if (isset($settings['calendar_id'])) {
-            $this->assign('calendar_id', $settings['calendar_id']);
-        }
-        $whereCondition = '';
-        if (array_key_exists("event_types", $settings)) {
-            $eventTypes = $settings['event_types'];
-        }
-        if (array_key_exists("resources", $settings)) {
-            $resources = $settings['resources'];
-        }
-
-        $calendarId = isset($_GET['id']) ? $_GET['id'] : '';
-        if ($calendarId) {
-            if (!empty($resources)) {
-                $contactList = implode(',', array_keys($resources));
-                $whereCondition .= " AND p.contact_id in ({$contactList})";
-            } else if (!empty($eventTypes)) {
-                $eventTypesList = implode(',', array_keys($eventTypes));
-                $whereCondition .= " AND e.event_type_id in ({$eventTypesList})";
-            } else {
-                $whereCondition .= ' AND e.event_type_id in (0)';
-            }
-        }
-
-        //Show/Hide Past Events
-        $currentDate = date("Y-m-d h:i:s", time());
-        if (empty($settings['event_past'])) {
-            $whereCondition .= " AND e.start_date > '" . $currentDate . "'";
-        }
-
-        // Show events according to number of next months
-        if (!empty($settings['event_from_month'])) {
-            $monthEvents = $settings['event_from_month'];
-            $monthEventsDate = date("Y-m-d h:i:s",
-                    strtotime(date("Y-m-d h:i:s", strtotime($currentDate)) . "+" . $monthEvents . " month"));
-            $whereCondition .= " AND e.start_date < '" . $monthEventsDate . "'";
-        }
-
-        //Show/Hide Public Events
-        if (!empty($settings['event_is_public'])) {
-            $whereCondition .= " AND e.is_public = 1";
-        }
-
-        if (empty($resources)) {
-            //Check recurringEvent is available or not.
-            if (isset($settings['recurring_event']) && $settings['recurring_event'] == 1) {
-                $query = "
-                    SELECT r.`entity_id` id, `title` title, `start_date` start, `end_date` end ,`event_type_id` event_type
-                    FROM `civicrm_event` e
-                    LEFT JOIN civicrm_recurring_entity r ON r.entity_id = e.id
-                    WHERE r.entity_table='civicrm_event'
-                      AND e.is_active = 1
-                      AND e.is_template = 0
-                  ";
-            } else {
-                $query = "
-                    SELECT e.`id`, e.`title`, e.`start_date` start, e.`end_date` end, e.`event_type_id` event_type
-                    FROM `civicrm_event` e
-                    WHERE e.is_active = 1
-                      AND e.is_template = 0
-                  ";
-            }
-        } else {
-            $query = "
-                    SELECT e.`id` id, e.`title`, e.`start_date` start, e.`end_date` end, p.`contact_id`, c.display_name
-                    FROM `civicrm_event` e
-                    LEFT JOIN `civicrm_participant` p ON p.event_id = e.id
-                    LEFT JOIN `civicrm_contact`c on c.id=p.contact_id
-                    WHERE e.is_active = 1
-                      AND e.is_template = 0
-                    ";
-        }
-
-        $query .= $whereCondition;
-        $events['events'] = array();
-
-        $dao = CRM_Core_DAO::executeQuery($query);
-        $eventCalendarParams = array('title' => 'title', 'start' => 'start', 'url' => 'url');
-
-        if (!empty($settings['event_end_date'])) {
-            $eventCalendarParams['end'] = 'end';
-        }
-
-        while ($dao->fetch()) {
-            $eventData = array();
-            $dao->url = html_entity_decode(CRM_Utils_System::url('civicrm/event/info', 'id=' . $dao->id ?: NULL));
-            foreach ($eventCalendarParams as $k) {
-                $eventData[$k] = $dao->$k;
-            }
-            if (!empty($resources)) {
-                $eventData['backgroundColor'] = "#{$resources[$dao->contact_id]}";
-                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                $eventData['title'] .= "\n" . $dao->display_name;
-            } else if (!empty($eventTypes)) {
-                $eventData['backgroundColor'] = "#{$eventTypes[$dao->event_type]}";
-                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                $eventData['eventType'] = $civieventTypesList[$dao->event_type];
-            } elseif ($calendarId == 0) {
-                $eventData['backgroundColor'] = "";
-                $eventData['textColor'] = $this->_getContrastTextColor($eventData['backgroundColor']);
-                $eventData['eventType'] = $civieventTypesList[$dao->event_type];
-            }
-
-            $enrollment_status = civicrm_api3('Event', 'getsingle', [
-                'return' => ['is_full'],
-                'id' => $dao->id,
-            ]);
-
-            // Show/Hide enrollment status
-            if (!empty($settings['enrollment_status'])) {
-                if (!(isset($enrollment_status['is_error'])) && ( $enrollment_status['is_full'] == "1" )) {
-                    $eventData['url'] = '';
-                    $eventData['title'] .= ' FULL';
-                }
-            }
-            $events['timeDisplay'] = !empty($settings['event_time']) ?: '';
-            $events['isfilter'] = !empty($settings['event_event_type_filter']) ?: '';
-            $events['events'][] = $eventData;
-            $eventTypesFilter[$dao->event_type] = $civieventTypesList[$dao->event_type];
-        }
-
-        if (!empty($settings['event_event_type_filter'])) {
-            $events['eventTypes'][] = $eventTypesFilter;
-            $this->assign('eventTypes', $eventTypesFilter);
-        }
-
-        $events['displayEventEnd'] = 'true';
+        $this->assign('calendar_id', $calendarId);
+        $this->assign('time_display', !empty($settings['event_time']) ?: 'false');
+        $this->assign('displayEventEnd', $settings['event_end_date']);
 
         //Check weekBegin settings from calendar configuration
-        $weekBegins = '';
         if (isset($settings['week_begins_from_day']) && $settings['week_begins_from_day'] == 1) {
             //Get existing setting for weekday from civicrm start & set into event calendar.
             $weekBegins = Civi::settings()->get('weekBegins');
@@ -189,21 +70,16 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
         $weekBegins = $weekBegins ? $weekBegins : 0;
         $this->assign('weekBeginDay', $weekBegins);
 
-        if (isset($settings['time_format_24_hour'])) {
-            $this->assign('use24Hour', $settings['time_format_24_hour']);
-        }
-
-        //Send Events array to calendar.
-        $this->assign('civicrm_events', json_encode($events));
+        $this->assign('use24Hour', isset($settings['time_format_24_hour']) ?
+                $settings['time_format_24_hour']: false);
         parent::run();
     }
 
     /**
      * retrieve and reconstruct extension settings
      */
-    public function _eventCalendar_getSettings() {
+    public static function _eventCalendar_getSettings($calendarId = 0) {
         $settings = array();
-        $calendarId = isset($_GET['id']) ? $_GET['id'] : '';
 
         if ($calendarId) {
             $settings['calendar_id'] = $calendarId;
@@ -266,7 +142,7 @@ class CRM_EventCalendar_Page_ShowEvents extends CRM_Core_Page {
      * Referred from https://stackoverflow.com/questions/1331591
      */
 
-    function _getContrastTextColor($hexColor) {
+    static function _getContrastTextColor($hexColor) {
         // hexColor RGB
         $R1 = hexdec(substr($hexColor, 1, 2));
         $G1 = hexdec(substr($hexColor, 3, 2));
